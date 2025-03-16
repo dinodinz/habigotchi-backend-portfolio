@@ -1,11 +1,9 @@
 import { createPets, fetchPet, changePet } from "../models/pets-model.js";
 
 export function postPet(req, res, next) {
-  const pet_name = req.body.pet_name;
-  const pet_status = req.body.pet_status;
-  const coins = req.body.current_coin;
+  const { pet_name, pet_status, current_coin } = req.body;
 
-  return createPets(pet_name, pet_status, coins)
+  createPets(pet_name, pet_status, current_coin)
     .then((addedPet) => {
       res.status(202).send({ addedPet: addedPet });
     })
@@ -16,9 +14,10 @@ export function postPet(req, res, next) {
 
 export function getPet(req, res, next) {
   const user_name = req.params.user_name;
-  return fetchPet(user_name)
+
+  fetchPet(user_name)
     .then((petData) => {
-      res.status(200).send(petData[0]);
+      res.status(200).send({ petData: petData });
     })
     .catch((err) => {
       next(err);

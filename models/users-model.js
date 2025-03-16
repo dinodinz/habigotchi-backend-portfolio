@@ -1,5 +1,6 @@
 import { response } from "express";
 import db from "../db/connection.js";
+import { checkUserIdExist } from "../db/seeds/utils.js";
 
 export function createUser(reqBody) {
   const { user_name } = reqBody;
@@ -19,14 +20,14 @@ export function fetchUsers() {
 
 export function fetchUserByUserId(user_id) {
   let SQLString = `SELECT * FROM users WHERE user_id = $1;`;
-  return db.query(SQLString, [user_id]).then(({ rows }) => {
-    if (rows.length === 0) {
-      return Promise.reject({ msg: "User not found", status: 404 });
-    } else {
+
+  return checkUserIdExist(user_id).then(() => {
+    return db.query(SQLString, [user_id]).then(({ rows }) => {
       return rows[0];
-    }
+    });
   });
 }
+
 export function deleteUser(user_id) {
   return db
     .query(`DELETE FROM categories WHERE user_id = $1;`, [user_id])

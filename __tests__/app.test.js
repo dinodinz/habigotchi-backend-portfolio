@@ -81,9 +81,9 @@ describe("GET /api/pets/:user_name", () => {
       .get("/api/pets/ryangawenda")
       .expect(200)
       .then((response) => {
-        expect(response.body.pet_name).toEqual("optimus");
-        expect(response.body.pet_happiness).toEqual(9);
-        expect(response.body.pet_health).toEqual(3);
+        expect(response.body.petData[0].pet_name).toEqual("optimus");
+        expect(response.body.petData[0].pet_happiness).toEqual(9);
+        expect(response.body.petData[0].pet_health).toEqual(3);
       });
   });
 });
@@ -145,6 +145,7 @@ describe("GET/api/users/:user_id", () => {
           user_id: 1,
           user_name: "dino",
           habits_tracked: 0,
+          total_tasks_completed: 0,
           user_onboarded: false,
           coins_earned: 0,
           coins_spent: 0,
@@ -163,7 +164,7 @@ describe("GET/api/users/:user_id", () => {
       .get("/api/users/200")
       .expect(404)
       .then((response) => {
-        expect(response.body.msg).toBe("User not found");
+        expect(response.body.error).toBe("Not found: User ID does not exist");
       });
   });
   test("400 id not a number", () => {
@@ -459,32 +460,6 @@ describe("PATCH /api/users/:user_id", () => {
       });
   });
 
-  describe("DELETE /api/users/:user_id", () => {
-    test("200:should delete a user from a given user_id", () => {
-      return request(app)
-        .delete("/api/users/1")
-        .expect(200)
-        .then((response) => {
-          expect(response._body.deletedUser.user_id).toEqual(1);
-          return db
-            .query("SELECT * FROM users WHERE user_id = 1")
-            .then(({ rows }) => {
-              expect(rows.length).toBe(0);
-              return db
-                .query("SELECT * FROM categories WHERE user_id = 1")
-                .then(({ rows }) => {
-                  expect(rows.length).toBe(0);
-                  return db
-                    .query("SELECT * FROM habits WHERE user_id = 1")
-                    .then(({ rows }) => {
-                      expect(rows.length).toBe(0);
-                    });
-                });
-            });
-        });
-    });
-  });
-
   test("201:should update a user's property even if request body is only carrying one property ", () => {
     const reqBody = {
       pet_id: 2,
@@ -498,6 +473,32 @@ describe("PATCH /api/users/:user_id", () => {
       .then((response) => {
         const user = response.body.upDatedUser[0];
         expect(user.pet_id).toBe(2);
+      });
+  });
+});
+
+describe("DELETE /api/users/:user_id", () => {
+  test("200:should delete a user from a given user_id", () => {
+    return request(app)
+      .delete("/api/users/1")
+      .expect(200)
+      .then((response) => {
+        expect(response._body.deletedUser.user_id).toEqual(1);
+        return db
+          .query("SELECT * FROM users WHERE user_id = 1")
+          .then(({ rows }) => {
+            expect(rows.length).toBe(0);
+            return db
+              .query("SELECT * FROM categories WHERE user_id = 1")
+              .then(({ rows }) => {
+                expect(rows.length).toBe(0);
+                return db
+                  .query("SELECT * FROM habits WHERE user_id = 1")
+                  .then(({ rows }) => {
+                    expect(rows.length).toBe(0);
+                  });
+              });
+          });
       });
   });
 });
