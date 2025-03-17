@@ -1,7 +1,7 @@
 
 ## Habigotchi Backend
 
-Backend server created for a Habit tracking mobile app, this database is hosting categories,pets,users and habits in a relational table hosted on supabase and render.
+Backend server created for a Habit tracking mobile app, this database is hosting categories,pets,users and habits using a relational table setup hosted on supabase and render.
 
 ## Minimum required versions:
 
