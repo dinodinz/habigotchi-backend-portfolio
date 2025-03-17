@@ -45,7 +45,6 @@ This is a Habit Tracking mobile app, with pet integration. You finish your habit
 
 ## Dependencies
 
-==============
 You will need to install the minimum dependency versions shown on the package.json file to avoid any issues when running the app
 
 If you have installed recent versions and are having issues, then installing the exact versions would be the best option.
