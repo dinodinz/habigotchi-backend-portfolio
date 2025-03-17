@@ -5,7 +5,7 @@ export function postPet(req, res, next) {
 
   createPets(pet_name, pet_status, current_coin)
     .then((addedPet) => {
-      res.status(202).send({ addedPet: addedPet });
+      res.status(201).send({ addedPet: addedPet });
     })
     .catch((err) => {
       next(err);

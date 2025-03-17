@@ -22,18 +22,6 @@ describe("TEST for invalid URL", () => {
   });
 });
 
-describe("TEST for 500 error", () => {
-  test("500: Should respond with 'Endpoint not found', if a request is sending to an invalid/non existing path", () => {
-    return request(app)
-      .post("/api/users")
-      .send({ asdadsad: "asd", wqdsad: 23 })
-      .expect(500)
-      .then((response) => {
-        expect(response.body.error).toBe("Internal Server Error");
-      });
-  });
-});
-
 describe("GET /api/categories", () => {
   test("should respond with an array of categories", () => {
     return request(app)
@@ -51,15 +39,26 @@ describe("GET /api/categories", () => {
 });
 
 describe("POST /api/pets/", () => {
-  test("should post a new pet to the pets table", () => {
+  test("should post a new pet to the pets table and will respond with the added pet", () => {
     return request(app)
       .post("/api/pets/")
       .send({
         pet_name: "lil skibidi",
         pet_status: "i love fortnite",
       })
-      .expect(202)
-      .then((res) => {
+      .expect(201)
+      .then((addedPet) => {
+        expect(addedPet.body.addedPet).toEqual(
+          expect.objectContaining({
+            pet_id: expect.any(Number),
+            pet_name: expect.any(String),
+            pet_health: expect.any(Number),
+            pet_happiness: expect.any(Number),
+            pet_status: expect.any(String),
+            current_coin: expect.any(Number),
+            pet_birthday: expect.any(String),
+          })
+        );
         return db
           .query("SELECT * FROM pets ORDER BY pet_id DESC LIMIT 1")
 
@@ -73,6 +72,16 @@ describe("POST /api/pets/", () => {
           });
       });
   });
+
+  test("400 Bad request: Should respond with 404 Bad Request if the request body is not carrying any values", () => {
+    return request(app)
+      .post("/api/pets/")
+      .send({})
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Bad Request");
+      });
+  });
 });
 
 describe("GET /api/pets/:user_name", () => {
@@ -84,6 +93,15 @@ describe("GET /api/pets/:user_name", () => {
         expect(response.body.petData[0].pet_name).toEqual("optimus");
         expect(response.body.petData[0].pet_happiness).toEqual(9);
         expect(response.body.petData[0].pet_health).toEqual(3);
+      });
+  });
+
+  test("404 error: Should return 404 not found if the username used was not an existing username", () => {
+    return request(app)
+      .get("/api/pets/99")
+      .expect(404)
+      .then((response) => {
+        expect(response.body.error).toBe("Not found: Username does not exist");
       });
   });
 });
@@ -115,6 +133,18 @@ describe("POST /api/users", () => {
         );
       });
   });
+
+  test("400 Bad Request: should return bad request if there request body was empty", () => {
+    const reqBody = {};
+
+    return request(app)
+      .post("/api/users")
+      .send(reqBody)
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Bad Request");
+      });
+  });
 });
 
 describe("GET /api/users", () => {
@@ -124,8 +154,10 @@ describe("GET /api/users", () => {
       .expect(200)
       .then((res) => {
         const usersArray = res.body.allUsers;
-        expect(usersArray).toBeInstanceOf(Array);
+
+        expect(Array.isArray(usersArray)).toBe(true);
         expect(usersArray.length).toBeGreaterThan(0);
+
         usersArray.forEach((user) => {
           expect(user).toHaveProperty("user_name");
         });
@@ -134,7 +166,7 @@ describe("GET /api/users", () => {
 });
 
 describe("GET/api/users/:user_id", () => {
-  test("GET 200: get users by id", () => {
+  test("GET 200: get user by id", () => {
     return request(app)
       .get("/api/users/1")
       .expect(200)
@@ -224,7 +256,7 @@ describe("POST /api/habits/:user_id", () => {
       });
   });
 
-  test("400:should respond with an array with a single object with all the properties of the added habit", () => {
+  test("400:should respond with 400 Bad request if the habit_id was not a number", () => {
     const reqBody = {
       habit_name: "Dino Habit",
       habit_frequency: "daily",
@@ -243,7 +275,7 @@ describe("POST /api/habits/:user_id", () => {
 });
 
 describe("PATCH /api/pets/:user_name", () => {
-  test("should patch the pet that corresponds to the given user_name owner - 1 parameter", () => {
+  test("should update the pet that corresponds to the given user_name owner - 1 parameter", () => {
     return request(app)
       .patch("/api/pets/ryangawenda")
       .send({
@@ -264,7 +296,7 @@ describe("PATCH /api/pets/:user_name", () => {
           });
       });
   });
-  test("should patch the pet that corresponds to the given user_name owner - multiple parameters", () => {
+  test("should update the pet that corresponds to the given user_name owner - multiple parameters", () => {
     return request(app)
       .patch("/api/pets/ryangawenda")
       .send({ pet_name: "Bumblebee", pet_health: 82, pet_happiness: 99 })
@@ -337,29 +369,29 @@ describe("TEST for finding endpoints", () => {
   });
 });
 
-// describe("DELETE /api/habits/:habit_id", () => {
-//   test("should respond with an array of object containing the deleted habit", () => {
-//     return request(app).delete("/api/habits/2").expect(200);
-//   });
+describe("DELETE /api/habits/:habit_id", () => {
+  test("should respond with an array of object containing the deleted habit", () => {
+    return request(app).delete("/api/habits/2").expect(200);
+  });
 
-//   test("404: Should respond with 404 Not Found if habit_id is valid format but doesn't exist in the habits table", () => {
-//     return request(app)
-//       .delete("/api/habits/99")
-//       .expect(404)
-//       .then((response) => {
-//         expect(response.body.error).toBe("Not found: Habit ID does not exist");
-//       });
-//   });
+  test("404: Should respond with 404 Not Found if habit_id is valid format but doesn't exist in the habits table", () => {
+    return request(app)
+      .delete("/api/habits/99")
+      .expect(404)
+      .then((response) => {
+        expect(response.body.error).toBe("Not found: Habit ID does not exist");
+      });
+  });
 
-//   test("400:Should respond with 400 Bad request if habit_id is using a different format", () => {
-//     return request(app)
-//       .get("/api/habits/A")
-//       .expect(400)
-//       .then((response) => {
-//         expect(response.body.msg).toBe("Bad Request");
-//       });
-//   });
-// });
+  test("400:Should respond with 400 Bad request if habit_id is using a different format", () => {
+    return request(app)
+      .get("/api/habits/A")
+      .expect(400)
+      .then((response) => {
+        expect(response.body.msg).toBe("Bad Request");
+      });
+  });
+});
 
 describe("PATCH /api/habits/:habit_id", () => {
   test("200:should respond with an array with a single object with all the properties of the added habit", () => {
@@ -473,6 +505,33 @@ describe("PATCH /api/users/:user_id", () => {
       .then((response) => {
         const user = response.body.upDatedUser[0];
         expect(user.pet_id).toBe(2);
+      });
+  });
+
+  test("404: should respond with 404 not found if the user_id was not existing ", () => {
+    const reqBody = {
+      pet_id: 2,
+      user_onboarded: true,
+    };
+
+    return request(app)
+      .patch("/api/users/99")
+      .send(reqBody)
+      .expect(404)
+      .then((response) => {
+        expect(response.body.error).toBe("Not found: User ID does not exist");
+      });
+  });
+
+  test("400: should respond with 400 bad request if the request body was empty ", () => {
+    const reqBody = {};
+
+    return request(app)
+      .patch("/api/users/99")
+      .send(reqBody)
+      .expect(400)
+      .then((response) => {
+        expect(response.body.error).toBe("No fields to update");
       });
   });
 });

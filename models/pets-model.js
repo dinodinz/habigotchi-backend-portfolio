@@ -1,18 +1,21 @@
 import db from "../db/connection.js";
+import { checkUsernameExists } from "../db/seeds/utils.js";
 
 export function fetchPet(user_name) {
-  return db
-    .query(
-      `
-        SELECT pets.*
-        FROM users
-        JOIN pets ON users.pet_id = pets.pet_id
-        WHERE users.user_name = $1`,
-      [user_name]
-    )
-    .then((result) => {
-      return result.rows;
-    });
+  return checkUsernameExists(user_name).then(() => {
+    return db
+      .query(
+        `SELECT pets.* 
+         FROM users 
+         JOIN pets 
+         ON users.pet_id = pets.pet_id
+         WHERE users.user_name = $1`,
+        [user_name]
+      )
+      .then((result) => {
+        return result.rows;
+      });
+  });
 }
 
 export function createPets(pet_name, pet_status) {
@@ -67,7 +70,9 @@ export function changePet(reqBody, user_name) {
   SQL += propertiesToUpdate.join(", ");
   SQL += ` WHERE pet_id = (SELECT pet_id FROM users WHERE user_name = $${index++}) RETURNING *`;
 
-  return db.query(SQL, values).then((result) => {
-    return result.rows[0];
+  return checkUsernameExists(user_name).then(() => {
+    return db.query(SQL, values).then((result) => {
+      return result.rows[0];
+    });
   });
 }

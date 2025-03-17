@@ -1,6 +1,5 @@
-import { response } from "express";
 import db from "../db/connection.js";
-import { checkUserIdExist } from "../db/seeds/utils.js";
+import { checkUserIdExist, checkUsernameExists } from "../db/seeds/utils.js";
 
 export function createUser(reqBody) {
   const { user_name } = reqBody;
@@ -29,22 +28,20 @@ export function fetchUserByUserId(user_id) {
 }
 
 export function deleteUser(user_id) {
-  return db
-    .query(`DELETE FROM categories WHERE user_id = $1;`, [user_id])
-    .then((response) => {
-      return db.query(`DELETE FROM habits WHERE user_id = $1;`, [user_id]);
-    })
-    .then((response) => {
-      return db
-        .query(`DELETE FROM users WHERE user_id = $1 returning *;`, [user_id])
-        .then(({ rows }) => {
-          if (rows.length === 0) {
-            return Promise.reject({ msg: "User not found", status: 404 });
-          } else {
+  return checkUserIdExist(user_id).then(() => {
+    return db
+      .query(`DELETE FROM categories WHERE user_id = $1;`, [user_id])
+      .then(() => {
+        return db.query(`DELETE FROM habits WHERE user_id = $1;`, [user_id]);
+      })
+      .then(() => {
+        return db
+          .query(`DELETE FROM users WHERE user_id = $1 returning *;`, [user_id])
+          .then(({ rows }) => {
             return rows[0];
-          }
-        });
-    });
+          });
+      });
+  });
 }
 export function updateUser(userId, updateData) {
   const {
@@ -121,7 +118,9 @@ export function updateUser(userId, updateData) {
   SQL += propertiesToUpdate.join(", ");
   SQL += ` WHERE user_id = $${index++} RETURNING *`;
 
-  return db.query(SQL, values).then((response) => {
-    return response.rows;
+  return checkUserIdExist(userId).then(() => {
+    return db.query(SQL, values).then((response) => {
+      return response.rows;
+    });
   });
 }

@@ -29,3 +29,18 @@ export function checkHabitIdExists(habit_id) {
     } else return "Habit ID Exists";
   });
 }
+
+export function checkUsernameExists(user_name) {
+  let SQL = `SELECT * FROM users 
+  WHERE user_name = $1`;
+
+  return db.query(SQL, [user_name]).then((result) => {
+    if (result.rows.length === 0) {
+      return Promise.reject({
+        status: 404,
+        error: "Not found",
+        detail: "Username does not exist",
+      });
+    } else return "Username Exists";
+  });
+}
