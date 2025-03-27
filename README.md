@@ -16,6 +16,7 @@ PSQL = 14.14
 - **Jest, Jest Sorted, Supertest** (for testing)
 - **Nodemon**
 - **Husky** (additional layer of testing)
+- **ES6 Javascript** (syntax used for the whole project)
 
 ## Instructions:
 
